@@ -6,3 +6,8 @@ class UserIn(BaseModel):
     uname: str
     password: str
     role: int
+
+
+class UserLogin(BaseModel):
+    name: str
+    password: str
