@@ -1,12 +1,21 @@
+import time
 import uuid
 
 from db import get_db
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from model.user import Session as UserSession
 from model.user import User
 from Schema.user import UserIn, UserLogin
 from sqlalchemy.orm import Session
 
 router = APIRouter()
+
+
+async def require_user(ticket: str | None = Cookie(default=None), db: Session = Depends(get_db)):
+    user = db.query(UserSession).filter(UserSession.session_key == ticket).first()
+    if not user:
+        raise HTTPException(status_code=403, detail="login required")
+    return user
 
 
 @router.get("/")
@@ -20,7 +29,7 @@ async def create_user(item: UserIn, db: Session = Depends(get_db)):
     user = User(name=item.name, uname=item.uname, password=item.password, role=item.role)
     db.add(user)
     db.commit()
-    return 1
+    return "user added"
 
 
 @router.post("/login")
@@ -28,5 +37,16 @@ async def login(item: UserLogin, response: Response, db: Session = Depends(get_d
     user = db.query(User).filter(User.name == item.name, User.password == item.password).first()
     if not user:
         return "login failed"
-    response.set_cookie(key="ticket", value=str(uuid.uuid4()))
+    ticket = str(uuid.uuid4())
+    session = UserSession(session_key=ticket, user_id=user.id, user_name=user.name, create_time=time.time())
+    db.add(session)
+    db.commit()
+    response.set_cookie(key="ticket", value=ticket)
     return "login succeed"
+
+
+@router.post("/logout")
+async def logout(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    db.query(UserSession).filter(UserSession.session_key == user.session_key).delete()
+    db.commit()
+    return "logout succeed"
