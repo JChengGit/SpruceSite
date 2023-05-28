@@ -1,6 +1,7 @@
 import time
 import uuid
 
+from applog import logger
 from db import get_db
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from model.user import Session as UserSession
@@ -11,16 +12,22 @@ from sqlalchemy.orm import Session
 router = APIRouter()
 
 
-async def require_user(ticket: str | None = Cookie(default=None), db: Session = Depends(get_db)):
-    user = db.query(UserSession).filter(UserSession.session_key == ticket).first()
-    if not user:
+async def login_required(ticket: str | None = Cookie(default=None), db: Session = Depends(get_db)):
+    sess = db.query(UserSession).filter(UserSession.session_key == ticket).first()
+    if not sess:
         raise HTTPException(status_code=403, detail="login required")
+    return sess
+
+
+async def require_user(db: Session = Depends(get_db), sess: UserSession = Depends(login_required)):
+    user = db.query(User).filter(User.id == sess.user_id).first()
     return user
 
 
 @router.get("/")
 async def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
+    logger.info("request user.")
     return {"user": user.name}
 
 
@@ -29,6 +36,7 @@ async def create_user(item: UserIn, db: Session = Depends(get_db)):
     user = User(name=item.name, uname=item.uname, password=item.password, role=item.role)
     db.add(user)
     db.commit()
+    logger.info(f"create user: {user.name}")
     return "user added"
 
 
@@ -42,6 +50,7 @@ async def login(item: UserLogin, response: Response, db: Session = Depends(get_d
     db.add(session)
     db.commit()
     response.set_cookie(key="ticket", value=ticket)
+    logger.info(f"user login: {user.name}")
     return "login succeed"
 
 
@@ -49,4 +58,5 @@ async def login(item: UserLogin, response: Response, db: Session = Depends(get_d
 async def logout(user: User = Depends(require_user), db: Session = Depends(get_db)):
     db.query(UserSession).filter(UserSession.session_key == user.session_key).delete()
     db.commit()
+    logger.info(f"user logout: {user.name}")
     return "logout succeed"
