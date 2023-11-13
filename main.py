@@ -9,7 +9,7 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    logger.info("request  hello world test.")
+    logger.info("request hello world test.")
     return {"message": "Hello World"}
 
 
@@ -18,7 +18,7 @@ async def error():
     try:
         1/0
     except Exception as e:
-        logger.error("What?!")
+        logger.error(f"What?! {str(e)}")
 
 
 @app.get("/require")
