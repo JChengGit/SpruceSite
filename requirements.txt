@@ -1,5 +1,5 @@
-fastapi
-sqlalchemy
-psycopg2
-uvicorn
-loguru
+fastapi==0.104.1
+sqlalchemy==2.0.23
+psycopg2==2.9.9
+uvicorn==0.24.0.post1
+loguru==0.7.2
