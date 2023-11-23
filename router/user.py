@@ -33,7 +33,7 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
 
 @router.post("/register")
 async def create_user(item: UserIn, db: Session = Depends(get_db)):
-    user = User(name=item.name, uname=item.uname, password=item.password, role=item.role)
+    user = User(name=item.name, uname=item.uname, password=item.password, role_id=item.role_id)
     db.add(user)
     db.commit()
     logger.info(f"create user: {user.name}")
@@ -56,7 +56,7 @@ async def login(item: UserLogin, response: Response, db: Session = Depends(get_d
 
 @router.post("/logout")
 async def logout(user: User = Depends(require_user), db: Session = Depends(get_db)):
-    db.query(UserSession).filter(UserSession.session_key == user.session_key).delete()
+    db.query(UserSession).filter(UserSession.user_id == user.id).delete()
     db.commit()
     logger.info(f"user logout: {user.name}")
     return "logout succeed"
