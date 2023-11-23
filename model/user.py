@@ -3,13 +3,12 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    uname = Column(String)
     password = Column(String)
-    role = Column(Integer, ForeignKey("role.id"))
+    role_id = Column(Integer, ForeignKey("role.id"))
 
 
 class Role(Base):
