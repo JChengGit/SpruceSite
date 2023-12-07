@@ -1,7 +1,8 @@
-from app import ROLE_MAP
-from db import SessionLocal, Base, engine
 from sqlalchemy.exc import OperationalError, ProgrammingError
+
+from app import ROLE_MAP
 from applog import logger
+from db import Base, SessionLocal, engine
 from model.user import Role, User
 
 

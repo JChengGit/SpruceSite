@@ -1,13 +1,14 @@
 import time
 import uuid
 
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from sqlalchemy.orm import Session
+
 from applog import logger
 from db import get_db
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from model.user import Session as UserSession
 from model.user import User
 from Schema.user import UserIn, UserLogin
-from sqlalchemy.orm import Session
 
 router = APIRouter()
 
